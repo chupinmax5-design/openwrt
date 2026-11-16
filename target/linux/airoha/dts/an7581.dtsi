@@ -222,6 +222,66 @@
 			opp-hz = /bits/ 64 <1200000000>;
 			required-opps = <&smcc_opp14>;
 		};
+		/*
+		 * Above 1200 MHz only posdiv=0 works, so the grid is 50 MHz. All
+		 * of these are turbo-mode on this SoC: 1500 hangs it within
+		 * seconds at stock Vcore, and 1450 has only been held for 44
+		 * minutes. cpufreq keeps them out of the table until boost is
+		 * switched on by hand, and a board that falls over up here comes
+		 * back with boost off.
+		 *
+		 * The levels need a BL31 that knows them. 1500-1600 also need the
+		 * core raised, which BL31 does itself per step, and only on boards
+		 * whose AVS pin it found wired to the buck at startup; elsewhere
+		 * it refuses those levels.
+		 */
+		opp-1250000000 {
+			opp-hz = /bits/ 64 <1250000000>;
+			required-opps = <&smcc_opp15>;
+			turbo-mode;
+		};
+
+		opp-1300000000 {
+			opp-hz = /bits/ 64 <1300000000>;
+			required-opps = <&smcc_opp16>;
+			turbo-mode;
+		};
+
+		opp-1350000000 {
+			opp-hz = /bits/ 64 <1350000000>;
+			required-opps = <&smcc_opp17>;
+			turbo-mode;
+		};
+
+		opp-1400000000 {
+			opp-hz = /bits/ 64 <1400000000>;
+			required-opps = <&smcc_opp18>;
+			turbo-mode;
+		};
+
+		opp-1450000000 {
+			opp-hz = /bits/ 64 <1450000000>;
+			required-opps = <&smcc_opp19>;
+			turbo-mode;
+		};
+
+		opp-1500000000 {
+			opp-hz = /bits/ 64 <1500000000>;
+			required-opps = <&smcc_opp20>;
+			turbo-mode;
+		};
+
+		opp-1550000000 {
+			opp-hz = /bits/ 64 <1550000000>;
+			required-opps = <&smcc_opp21>;
+			turbo-mode;
+		};
+
+		opp-1600000000 {
+			opp-hz = /bits/ 64 <1600000000>;
+			required-opps = <&smcc_opp22>;
+			turbo-mode;
+		};
 	};
 
 	cpu_smcc_opp_table: opp-table-cpu-smcc {
@@ -285,6 +345,37 @@
 
 		smcc_opp14: opp14 {
 			opp-level = <14>;
+		};
+		smcc_opp15: opp15 {
+			opp-level = <15>;
+		};
+
+		smcc_opp16: opp16 {
+			opp-level = <16>;
+		};
+
+		smcc_opp17: opp17 {
+			opp-level = <17>;
+		};
+
+		smcc_opp18: opp18 {
+			opp-level = <18>;
+		};
+
+		smcc_opp19: opp19 {
+			opp-level = <19>;
+		};
+
+		smcc_opp20: opp20 {
+			opp-level = <20>;
+		};
+
+		smcc_opp21: opp21 {
+			opp-level = <21>;
+		};
+
+		smcc_opp22: opp22 {
+			opp-level = <22>;
 		};
 	};
 

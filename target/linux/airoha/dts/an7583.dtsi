@@ -185,6 +185,61 @@
 			opp-hz = /bits/ 64 <1200000000>;
 			required-opps = <&smcc_opp14>;
 		};
+
+		/*
+		 * Above 1200 MHz the PLL only runs with posdiv=0, so the grid is
+		 * a hard 50 MHz. 1450 is where this SoC stops at stock Vcore,
+		 * measured under sustained load: 1500 passes short tests and
+		 * then hangs a minute into a soak.
+		 */
+		opp-1250000000 {
+			opp-hz = /bits/ 64 <1250000000>;
+			required-opps = <&smcc_opp15>;
+		};
+
+		opp-1300000000 {
+			opp-hz = /bits/ 64 <1300000000>;
+			required-opps = <&smcc_opp16>;
+		};
+
+		opp-1350000000 {
+			opp-hz = /bits/ 64 <1350000000>;
+			required-opps = <&smcc_opp17>;
+		};
+
+		opp-1400000000 {
+			opp-hz = /bits/ 64 <1400000000>;
+			required-opps = <&smcc_opp18>;
+		};
+
+		opp-1450000000 {
+			opp-hz = /bits/ 64 <1450000000>;
+			required-opps = <&smcc_opp19>;
+		};
+
+		/*
+		 * Not stable at stock Vcore: 1500 hangs this SoC within a minute
+		 * at 987 mV. Marked turbo-mode so cpufreq keeps them out of the
+		 * table until boost is switched on by hand, and a board that
+		 * falls over up here comes back with boost off.
+		 */
+		opp-1500000000 {
+			opp-hz = /bits/ 64 <1500000000>;
+			required-opps = <&smcc_opp20>;
+			turbo-mode;
+		};
+
+		opp-1550000000 {
+			opp-hz = /bits/ 64 <1550000000>;
+			required-opps = <&smcc_opp21>;
+			turbo-mode;
+		};
+
+		opp-1600000000 {
+			opp-hz = /bits/ 64 <1600000000>;
+			required-opps = <&smcc_opp22>;
+			turbo-mode;
+		};
 	};
 
 	cpu_smcc_opp_table: opp-table-cpu-smcc {
@@ -248,6 +303,39 @@
 
 		smcc_opp14: opp14 {
 			opp-level = <14>;
+		};
+
+		/* Levels only BL31 understands; they must match enum e_cpu_freq. */
+		smcc_opp15: opp15 {
+			opp-level = <15>;
+		};
+
+		smcc_opp16: opp16 {
+			opp-level = <16>;
+		};
+
+		smcc_opp17: opp17 {
+			opp-level = <17>;
+		};
+
+		smcc_opp18: opp18 {
+			opp-level = <18>;
+		};
+
+		smcc_opp19: opp19 {
+			opp-level = <19>;
+		};
+
+		smcc_opp20: opp20 {
+			opp-level = <20>;
+		};
+
+		smcc_opp21: opp21 {
+			opp-level = <21>;
+		};
+
+		smcc_opp22: opp22 {
+			opp-level = <22>;
 		};
 	};
 

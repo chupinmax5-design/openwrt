@@ -1,0 +1,27 @@
+#!/bin/sh /etc/rc.common
+
+START=96
+
+boot() {
+	case "$(board_name)" in
+		nokia,xg-040g-md-ubi|nokia,xg-040g-mf-ubi)
+			# Keep recovery initramfs at stock frequencies.
+			grep -q ' / overlay ' /proc/mounts || return 0
+			[ -w /sys/devices/system/cpu/cpufreq/boost ] || return 1
+			echo 1 > /sys/devices/system/cpu/cpufreq/boost
+			;;
+	esac
+	[ "$(board_name)" = nokia,xg-040g-md-ubi ] || return 0
+	p=/sys/devices/system/cpu/cpu0/cpufreq
+	[ "$(cat "$p/scaling_max_freq")" = 1600000 ] || return 0
+	governor=$(cat "$p/scaling_governor") || return 1
+	# BL31 can refuse 1600 MHz without AVS; use PLL readback, not the requested step.
+	if ! echo performance > "$p/scaling_governor" ||
+	   [ "$(cat "$p/cpuinfo_cur_freq")" != 1600000 ]; then
+		echo 1450000 > "$p/scaling_max_freq" || {
+			echo "$governor" > "$p/scaling_governor"
+			return 1
+		}
+	fi
+	echo "$governor" > "$p/scaling_governor"
+}

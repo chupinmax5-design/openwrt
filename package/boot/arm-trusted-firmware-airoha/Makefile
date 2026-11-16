@@ -91,11 +91,12 @@ else
 endif
 endef
 
+# ATF fork with CPU frequency steps above 1200 MHz.
 define Download/atf-airoha
-  SOURCE_DATE:=2026-09-30
-  SOURCE_VERSION:=705478c3d84fb1cba4c2de1bb99c43098b785d61
-  URL:=https://github.com/Ansuel/atf-airoha.git
-  MIRROR_HASH:=24d08b8d47b7c9fa83cda20bd80b38f5872dc48f8ec770cb82582e7fa0c5b75c
+  SOURCE_DATE:=2026-09-11
+  SOURCE_VERSION:=fef17564045e6c6325298dc6dd8db8db061a5344
+  URL:=https://github.com/VitaliySochniy/atf-airoha.git
+  MIRROR_HASH:=e0b9e623f5a722f0eb1e9cb6b3c5d24aa00c8dd644f61a61b10237688c232a12
   PROTO:=git
   FILE:=atf-airoha-$$$$(subst -,.,$$$$(SOURCE_DATE))~$$$$(call version_abbrev,$$$$(SOURCE_VERSION)).tar.zst
   SUBDIR:=atf-airoha
@@ -114,7 +115,7 @@ define Download/mbedtls
   FILE:=$(MBEDTLS_SOURCE).tar.zst
   PROTO:=git
   URL:=https://github.com/Mbed-TLS/mbedtls.git
-  SOURCE_VERSION:=72718dd87e087215ce9155a826ee5a66cfbe9631
+  SOURCE_VERSION:=d34b3c16b64dfdc4813e119837f408dd798da21c
   MIRROR_HASH:=482e699edb915f8530c99f680ac69783036d96d461eebc95382d19a6064e906b
   SUBDIR:=$(MBEDTLS_SOURCE)
 endef

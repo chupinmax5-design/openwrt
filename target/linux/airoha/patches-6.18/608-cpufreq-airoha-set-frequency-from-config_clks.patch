@@ -1,0 +1,109 @@
+From: Vitaliy Sochnev <sochnev.v.74@gmail.com>
+Date: Sun, 13 Sep 2026 05:00:00 +0100
+Subject: [PATCH] cpufreq: airoha: set the frequency from config_clks
+
+The CPU frequency is a performance state of the "perf" domain and was left
+to required-opps. The OPP core sets required-opps before the regulators
+when scaling up and after them when scaling down, so with a CPU supply
+both transitions run a high clock on a low rail.
+
+Set the performance state from config_clks instead, which the OPP core
+orders after the regulators on the way up and before them on the way down,
+and stop asking it to handle required-opps for the domain.
+
+Signed-off-by: Vitaliy Sochnev <sochnev.v.74@gmail.com>
+---
+--- a/drivers/cpufreq/airoha-cpufreq.c
++++ b/drivers/cpufreq/airoha-cpufreq.c
+@@ -5,6 +5,7 @@
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/pm_domain.h>
++#include <linux/pm_opp.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+@@ -17,15 +18,28 @@
+ };
+ 
+ static struct platform_device *cpufreq_pdev;
++static struct device *airoha_cpufreq_pd_dev;
+ 
+-/* NOP function to disable OPP from setting clock */
+-static int airoha_cpufreq_config_clks_nop(struct device *dev,
+-					  struct opp_table *opp_table,
+-					  struct dev_pm_opp *old_opp,
+-					  struct dev_pm_opp *new_opp,
+-					  void *data, bool scaling_down)
++/*
++ * The CPU frequency on these SoCs is a performance state of the "perf" power
++ * domain, applied by firmware. Set it from the clock callback rather than
++ * leaving it to required-opps: the OPP core applies required-opps before the
++ * regulators when scaling up and after them when scaling down, which is the
++ * wrong way round for a CPU supply, as both transitions then run a high clock
++ * on a low rail. The clock callback is ordered after the regulators on the way
++ * up and before them on the way down.
++ */
++static int airoha_cpufreq_config_clks(struct device *dev,
++				      struct opp_table *opp_table,
++				      struct dev_pm_opp *old_opp,
++				      struct dev_pm_opp *new_opp,
++				      void *data, bool scaling_down)
+ {
+-	return 0;
++	if (!airoha_cpufreq_pd_dev)
++		return -ENODEV;
++
++	return dev_pm_genpd_set_performance_state(airoha_cpufreq_pd_dev,
++			dev_pm_opp_get_required_pstate(new_opp, 0));
+ }
+ 
+ static const char * const airoha_cpufreq_clk_names[] = { "cpu", NULL };
+@@ -36,11 +50,11 @@
+ 	const struct dev_pm_domain_attach_data attach_data = {
+ 		.pd_names = airoha_cpufreq_pd_names,
+ 		.num_pd_names = ARRAY_SIZE(airoha_cpufreq_pd_names),
+-		.pd_flags = PD_FLAG_DEV_LINK_ON | PD_FLAG_REQUIRED_OPP,
++		.pd_flags = PD_FLAG_DEV_LINK_ON,
+ 	};
+ 	struct dev_pm_opp_config config = {
+ 		.clk_names = airoha_cpufreq_clk_names,
+-		.config_clks = airoha_cpufreq_config_clks_nop,
++		.config_clks = airoha_cpufreq_config_clks,
+ 	};
+ 	struct platform_device *cpufreq_dt;
+ 	struct airoha_cpufreq_priv *priv;
+@@ -57,7 +71,7 @@
+ 	if (!priv)
+ 		return -ENOMEM;
+ 
+-	/* Set OPP table conf with NOP config_clks */
++	/* The frequency is applied from config_clks, see above */
+ 	priv->opp_token = dev_pm_opp_set_config(cpu_dev, &config);
+ 	if (priv->opp_token < 0)
+ 		return dev_err_probe(dev, priv->opp_token, "Failed to set OPP config\n");
+@@ -68,6 +82,8 @@
+ 	if (ret < 0)
+ 		goto clear_opp_config;
+ 
++	airoha_cpufreq_pd_dev = priv->pd_list->pd_devs[0];
++
+ 	cpufreq_dt = platform_device_register_simple("cpufreq-dt", -1, NULL, 0);
+ 	ret = PTR_ERR_OR_ZERO(cpufreq_dt);
+ 	if (ret) {
+@@ -81,6 +97,7 @@
+ 	return 0;
+ 
+ detach_pm:
++	airoha_cpufreq_pd_dev = NULL;
+ 	dev_pm_domain_detach_list(priv->pd_list);
+ clear_opp_config:
+ 	dev_pm_opp_clear_config(priv->opp_token);
+@@ -94,6 +111,7 @@
+ 
+ 	platform_device_unregister(priv->cpufreq_dt);
+ 
++	airoha_cpufreq_pd_dev = NULL;
+ 	dev_pm_domain_detach_list(priv->pd_list);
+ 
+ 	dev_pm_opp_clear_config(priv->opp_token);
